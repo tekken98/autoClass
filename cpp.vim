@@ -38,6 +38,37 @@ map <F8> :let g:breakpoint = expand('<cword>') <CR>:exec 'breakdel func'. g:brea
 map <F9> 0W:let g:breakpoint = expand('<cword>') <CR>:exec 'breakadd func'. g:breakpoint<CR>
 imap <F12> <Esc><F12>
 map <F12> :w<CR>:make<CR>
+map <F5>  :call MarkWin()<CR>
+
+map <Right> :call PageDown(g:MarkWinId)<CR>
+map <Left> :call PageUp(g:MarkWinId)<CR>
+imap <Right> <Esc>:call PageDown(g:MarkWinId)<CR>a
+imap <Left> <Esc>:call PageUp(g:MarkWinId)<CR>a
+map <UP> <S-UP>
+map <DOWN> <S-DOWN>
+imap <UP> <S-UP>
+imap <DOWN> <S-DOWN>
+func! PageDown(winid)
+    let curid=win_getid()
+    call win_gotoid(a:winid)
+    exec "normal "
+    call win_gotoid(curid)
+endf
+func! PageUp(winid)
+    let curid=win_getid()
+    call win_gotoid(a:winid)
+    exec "normal " 
+    call win_gotoid(curid)
+endf
+func! MarkWin()
+    let nr = winnr('$')
+    if nr == 1 
+        vsplit       " need first split then win_getid
+    endif
+    let g:MarkWinId = win_getid()
+    wincmd x
+endf
+
 
 func! UpdateTags()
     let g:cppCmdAdd='ctags --extra=+q  --fields=+a+S -a  --c++-kinds=mcfp --language-force=c++ *.h'
