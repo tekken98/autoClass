@@ -47,6 +47,16 @@ map <UP> <S-UP>
 map <DOWN> <S-DOWN>
 imap <UP> <S-UP>
 imap <DOWN> <S-DOWN>
+
+func! MapKey(name,first)
+    let s = ':inoremap ' . a:name . ' ' . a:first .' <Esc>o{}'.'<UP><UP><Esc>f(a'
+    exec s
+endfunc
+
+call MapKey('if','if ()')
+call MapKey('for','for ()')
+call MapKey('sw','switch ()')
+
 func! PageDown(winid)
     let curid=win_getid()
     call win_gotoid(a:winid)
@@ -307,6 +317,10 @@ function! UpdateClassFunc()
     exec "normal ma"
     let flag = 0
     for a in lines
+        let a = substitute(a,'//.*','','g')
+        if  a == "" 
+            continue
+        endif
         if matchstr(a,'{') !="" 
             let flag += 1
             continue
@@ -349,10 +363,11 @@ function! OpenBuffer(name)
     let fname = matchstr(a:name,"[^.]*")
     let inc = "#include \"" . fname . ".h\""
     if search(inc) == 0
-        exec "normal i" . inc
+        call append(line('.'),inc)
     endif
 endfunction
-
+"a : function name
+"n : classname
 function! InsertFunc(a,n)
     if matchstr(a:a,")\s\*;") == ""  
         return
@@ -372,28 +387,23 @@ function! InsertFunc(a,n)
         let target = l[1] . a:n . "::" . l[2] . l[3] 
         let target= substitute(target,'^\s\+','','')
         let other = substitute(target,'\~','\\\~','')
+        let other = substitute(other,'\*','\\\*','')
         if search(other,'nw')
             return
         endif
         exec "normal G"
-        if search ('//'. toupper(a:n) . ' BEGIN','w')
-            exec "normal o"
+        if search('//'. toupper(a:n) . ' BEGIN','w')  == "" 
+            let lst = [   '//' . toupper(a:n) . ' BEGIN',
+                        \ target,
+                        \ '{',
+                        \ '}',
+                        \ '//' . toupper(a:n) . ' END' ]
         else
-            exec "normal G"
-            exec "normal o"
-            exec "normal 0d$"
-            exec "normal o " . "//" . toupper(a:n) . " BEGIN"
-            exec "normal =="
-            exec "normal o" . toupper(a:n). " END"
-            exec "normal =="
-            exec "normal k"
-            exec "normal o"
+            let lst = [  target,
+                        \ '{',
+                        \ '}']
         endif
-        exec "normal 0d$"
-        exec "normal o". target . "\n{"
-        exec "normal o };"
-        exec "normal =="
-        exec "normal ma"
+        call append(line('.'),lst)
     endif
 endfunction
 
@@ -402,29 +412,24 @@ function! InsertClass()
     if  s:name == ''  
         let s:name ="name"
     endif
-    call UnMap()
-    exec "normal " . "iclass " .  s:name ."\n{"
-    exec "normal " . "o private:"
-    exec "normal " . "o public:"
-    exec "normal " . "a\n //constructor"
-    exec "normal " . "o"
-    exec "normal " . "0d$"
-    exec "normal " . "i " . s:name . "();"
-    exec "normal " . "o" . s:name . "(const ". s:name . "& s);"
-    exec "normal " . "o" .s:name . "& operator=(const ". s:name . "& s);"
-    exec "normal " . "o ~" . s:name . "();"
-    exec "normal " . "o public:"
-    exec "normal " . "=="
-    exec "normal " . "o"."//maniulator"
-    exec "normal " . "o"."accessor"
-    exec "normal " . "o "	
-    exec "normal " . "d0"
-    exec "normal " . "i };"
-    exec "normal " . "v11k"
-    exec "normal " . "="
+    let lst=['class ' .  s:name,
+                \ '{',
+                \ 'private:',
+                \ 'public:',
+                \ '//constructor',
+                \ '' . s:name . "();",
+                \ '' . s:name . "(const ". s:name . "& s);",
+                \ '' .s:name . "& operator=(const ". s:name . "& s);",
+                \ '~' . s:name . "();",
+                \ 'public:',
+                \ '//maniulator',
+                \ '//accessor',
+                \ '};' ]
+    call append(line('.'),lst)
+    exec "normal " . string(len(lst)) . '=='
     call search("private")
-    call Map()
 endfunction
+
 func! InsertSnipplet()
     let insertPos = line('.')
     let c = 0
@@ -432,13 +437,13 @@ func! InsertSnipplet()
     let filecontent = readfile(expand("~/.vim/ftplugin/c.snip"))
     for a in filecontent
         let c += 1
-        let name =  matchlist(a ,'//BEGIN\s\+\(\a\+\)')
+        let name =  matchlist(a ,'//BEGIN\s\+\(\w\+\)')
         if len(name) > 0 
             let sn = name[1]
             let begin = c
             continue
         endif
-        let name =  matchlist(a ,'//END\s\+\(\a\+\)')
+        let name =  matchlist(a ,'//END\s\+\(\w\+\)')
         if len(name) > 0
             let sn = name[1]
             let en = c - 2
@@ -449,18 +454,24 @@ func! InsertSnipplet()
     let lst = ['select snipplets:']
     let sel = ['hold']
     let c = 0
+    let width = 8
+    let s = ''
     for a in keys(g:snipdict)
         let c+=1
-        call add(lst, string(c). '.' . a)
+        let s = s .  string(c) . '.' . a . " "
+        if  c  >= width
+            let c = 0
+            call add(lst, s)
+            let s = ''
+        endif
         call add(sel,a)
     endfor
+    if  c <  width
+            call add(lst, s)
+    endif
     let  sn = inputlist(lst)
     let content = filecontent[g:snipdict[sel[sn]]['begin']:g:snipdict[sel[sn]]['end']]
     call append(insertPos,content)
-   " for a in content
-   "     let s = a . "\n"
-   "     exec "normal i" . s
-   " endfor
 endf
 func! FindSnippletName(name)
     let n = toupper(a:name)
@@ -476,10 +487,10 @@ func! AddYankToSnipplets()
     let lst=[]
     try 
         let lst=getreg('""',1,1)
-        call AddSnipplets(lst)
+        call AddToSnipplets(lst)
     endtry
 endfunc
-func! AddSnipplets(lines)
+func! AddToSnipplets(lines)
     let snipname = input("input snip name:")
     let find =  FindSnippletName(snipname)
     if  find == "" 
@@ -489,17 +500,13 @@ func! AddSnipplets(lines)
         return
     endif
     split ~/.vim/ftplugin/c.snip
-    exec "normal gg"
-    if  search('//BEGIN')  > 0 
-        let be = 'BEGIN '
-        let ne = 'END '
-    else
-        let be = '//BEGIN '
-        let ne = '//END '
-    endif
-    exec 'normal O' . be . toupper(snipname)
-    let curpos = line('.')
-    exec 'normal o' . ne . toupper(snipname)
-    call append(curpos,a:lines)
+    call cursor(1,1)
+    call search('//BEGIN') 
+    let be = '//BEGIN '
+    let ne = '//END '
+    call append(line('.') - 1,be .toupper(snipname))
+    "exec 'normal O' . be . toupper(snipname)
+    call append(line('.') - 1,ne . toupper(snipname))
+    call append(line('.') - 2 ,a:lines)
     :wq
 endf
