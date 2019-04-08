@@ -1,17 +1,14 @@
 function! Map()
     inoremap #" #include ""<Left>
     inoremap #< #include <><Left>
-    inoremap // <Esc>0i//<Esc>
     inoremap ?? <Esc>:s/\/\///g<CR>==
     inoremap ;; <Esc>A;
     inoremap {{ <Esc>i{}<Esc>O
-
 endf
 
 function! UnMap()
     iu #"
     iu #<
-    iu //
     iu ??
     iu ;;
     iu {{
@@ -39,6 +36,8 @@ map <F9> 0W:let g:breakpoint = expand('<cword>') <CR>:exec 'breakadd func'. g:br
 imap <F12> <Esc><F12>
 map <F12> :w<CR>:make<CR>
 map <F5>  :call MarkWin()<CR>
+imap <F10> <Esc>:call InsertSnipplet()<CR>
+map <F7> :call AddYankToSnipplets()<CR>
 
 map <Right> :call PageDown(g:MarkWinId)<CR>
 map <Left> :call PageUp(g:MarkWinId)<CR>
@@ -426,3 +425,81 @@ function! InsertClass()
     call search("private")
     call Map()
 endfunction
+func! InsertSnipplet()
+    let insertPos = line('.')
+    let c = 0
+    let g:snipdict ={}
+    let filecontent = readfile(expand("~/.vim/ftplugin/c.snip"))
+    for a in filecontent
+        let c += 1
+        let name =  matchlist(a ,'//BEGIN\s\+\(\a\+\)')
+        if len(name) > 0 
+            let sn = name[1]
+            let begin = c
+            continue
+        endif
+        let name =  matchlist(a ,'//END\s\+\(\a\+\)')
+        if len(name) > 0
+            let sn = name[1]
+            let en = c - 2
+            let g:snipdict[sn] = {'begin': begin , 'end': en}
+            continue
+        endif
+    endfor
+    let lst = ['select snipplets:']
+    let sel = ['hold']
+    let c = 0
+    for a in keys(g:snipdict)
+        let c+=1
+        call add(lst, string(c). '.' . a)
+        call add(sel,a)
+    endfor
+    let  sn = inputlist(lst)
+    let content = filecontent[g:snipdict[sel[sn]]['begin']:g:snipdict[sel[sn]]['end']]
+    call append(insertPos,content)
+   " for a in content
+   "     let s = a . "\n"
+   "     exec "normal i" . s
+   " endfor
+endf
+func! FindSnippletName(name)
+    let n = toupper(a:name)
+    let filecontent = readfile(expand('~/.vim/ftplugin/c.snip'))
+    for a in filecontent
+        if matchstr(a,'//BEGIN\s\+'.n . '\s*$') != ""
+            return "find"
+        endif
+    endfor
+    return ""
+endf
+func! AddYankToSnipplets()
+    let lst=[]
+    try 
+        let lst=getreg('""',1,1)
+        call AddSnipplets(lst)
+    endtry
+endfunc
+func! AddSnipplets(lines)
+    let snipname = input("input snip name:")
+    let find =  FindSnippletName(snipname)
+    if  find == "" 
+        echo "no find"
+    else
+        echo "\nalread have " . snipname
+        return
+    endif
+    split ~/.vim/ftplugin/c.snip
+    exec "normal gg"
+    if  search('//BEGIN')  > 0 
+        let be = 'BEGIN '
+        let ne = 'END '
+    else
+        let be = '//BEGIN '
+        let ne = '//END '
+    endif
+    exec 'normal O' . be . toupper(snipname)
+    let curpos = line('.')
+    exec 'normal o' . ne . toupper(snipname)
+    call append(curpos,a:lines)
+    :wq
+endf
