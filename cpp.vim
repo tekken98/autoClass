@@ -314,7 +314,6 @@ function! UpdateClassFunc()
     let cppFile = expand('%<') . ".cpp"
     call UnMap()
     call OpenBuffer(cppFile)
-    exec "normal ma"
     let flag = 0
     for a in lines
         let a = substitute(a,'//.*','','g')
@@ -333,9 +332,8 @@ function! UpdateClassFunc()
         endif
         call InsertFunc(a,cname)
     endfor
+    call search(cname)
     call Map()
-    exec "normal 'a"
-    exec "normal %"
 endfunction
 
 function! OpenBuffer(name)
@@ -369,10 +367,13 @@ endfunction
 "a : function name
 "n : classname
 function! InsertFunc(a,n)
-    if matchstr(a:a,")\s\*;") == ""  
+    if matchstr(a:a,')\s*;') == ""  
         return
     endif
-    let l = matchlist(a:a,'[ \t]*\(.*\)[ ]\([^( ]\+\)\((.*\);')
+    let l = substitute(a:a,'\s*(\s*','(','g')
+    let l = substitute(l,'\s\+',' ','g')
+    let l = substitute(l,'\s*)\s*',')','g')
+    let l = matchlist(l,'[ \t]*\(.*\)[ ]\([^( ]\+\)\((.*\);')
     if len(l) < 2 
         let l = matchlist(a:a,'\([ \t]*\)\([^( ]\+\)\((.*\);')
         if  len(l) > 2
