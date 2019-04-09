@@ -413,6 +413,11 @@ function! InsertClass()
     if  s:name == ''  
         let s:name ="name"
     endif
+    let l = getline('.')
+    let l = substitute(l,'\s\+$','','g')
+    if  l == ""
+        exec 'normal dd'
+    endif
     let lst=['class ' .  s:name,
                 \ '{',
                 \ 'private:',
@@ -426,13 +431,12 @@ function! InsertClass()
                 \ '//maniulator',
                 \ '//accessor',
                 \ '};' ]
-    call append(line('.'),lst)
+    call append(line('.') - 1,lst)
     exec "normal " . string(len(lst)) . '=='
     call search("private")
 endfunction
 
 func! InsertSnipplet()
-    let insertPos = line('.')
     let c = 0
     let g:snipdict ={}
     let filecontent = readfile(expand("~/.vim/ftplugin/c.snip"))
@@ -472,8 +476,9 @@ func! InsertSnipplet()
     endif
     let  sn = inputlist(lst)
     let content = filecontent[g:snipdict[sel[sn]]['begin']:g:snipdict[sel[sn]]['end']]
-    call append(insertPos,content)
+    call append(line('.') - 1, content)
 endf
+
 func! FindSnippletName(name)
     let n = toupper(a:name)
     let filecontent = readfile(expand('~/.vim/ftplugin/c.snip'))
@@ -492,6 +497,10 @@ func! AddYankToSnipplets()
     endtry
 endfunc
 func! AddToSnipplets(lines)
+    if  len(a:lines) < 1 
+        echo "no selection"
+        return 
+    endif
     let snipname = input("input snip name:")
     let find =  FindSnippletName(snipname)
     if  find == "" 
