@@ -5,3 +5,4 @@ endf
 call MapKey('if','if','endif')
 call MapKey('for','for','endfor')
 call MapKey('fc','func!','endfunc')
+inoremap ); )
