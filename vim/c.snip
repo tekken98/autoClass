@@ -1,0 +1,95 @@
+/* vim: ft=cpp : */
+//BEGIN GLUT_MAKE
+INCLUDE=-I/usr/include
+LIBS=-lGL -lGLU -l3ds -lglut
+CFLAGS=-Wall
+a:a.cpp
+	cc a.cpp -o a $(INCLUDE) $(LIBS) $(CFLAGS)
+	
+//END GLUT_MAKE
+//BEGIN COUT_VECTOR
+#include <ostream>
+#include <iterator>
+template <typename T>
+void operator << (ostream& os,vector<T>& v)
+{
+    typedef ostream_iterator<T> oter;
+    oter ot(os,"\n");
+    copy(v.begin(),v.end(),ot);
+};
+//END COUT_VECTOR
+//BEGIN BINARY
+template <unsigned long N>
+struct binary {
+    static unsigned const value = binary<N/10>::value * 2 + N%10;
+};
+template <>
+struct binary<0> {
+    static unsigned const value = 0;
+};
+//END BINARY
+//BEGIN MSG_VARIANT_PARAMETERS
+#include <iostream>
+using namespace std;
+template <typename T>
+void msg(T& a)
+{
+    cout << a;
+};
+
+template <typename T, typename Y , typename... V>
+void  msg( T& a , Y& y ,  V& ... args)
+{
+    cout << a ;
+    msg(y,args...);
+}
+//END MSG_VARIANT_PARAMETERS
+//BEGIN MAIN_STD_EMPTY
+#include <iostream>
+using namespace std;
+int main()
+{
+    return 0;
+}
+//END MAIN_STD_EMPTY
+//BEGIN GLUT_MAIN
+#include <GL/freeglut.h>
+#include <GL/gl.h>
+void on_time(int timer_id)
+{
+    glutTimerFunc(20,on_time,0);
+}
+void on_special(int event,int x, int y)
+{
+}
+void on_display()
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    //glCullFace(GL_BACK);
+    //glEnable(GL_CULL_FACE);
+    //glEnable(GL_DEPTH);
+    //glEnable(GL_POLYGON_SMOOTH);
+    glutSwapBuffers();
+}
+void on_mouse(int button,int action,int x, int y)
+{
+}
+void init()
+{
+}
+int main(int argc , char** argv)
+{
+    glutInit(&argc,argv);
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+    glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGBA);
+    glutInitWindowSize(800, 600);
+    glutCreateWindow("title");
+    init();
+    glutDisplayFunc(on_display);
+    glutMouseFunc(on_mouse);
+    glutSpecialFunc(on_special);
+    glutTimerFunc(50,on_time,0);
+    glutMainLoop();
+    return 0;
+}
+//END GLUT_MAIN

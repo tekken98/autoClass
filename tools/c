@@ -1,0 +1,18 @@
+#!/bin/bash
+dir=~/.dir/path
+if [ -f $dir ];then
+	clear
+	cat $dir |sed "=" |sed 'N; s/\n/ /'
+	read -p "Input select: " a
+	b=`cat $dir|wc -l`
+	if ((  a > 0 && a <= $b )); then 
+		dest=`cat $dir |sed -n ${a}p`
+		clear
+		echo  $dest
+		cd $dest
+		l
+	fi
+else
+	mkdir -p ~/.dir
+	touch  $dir
+fi

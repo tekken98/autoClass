@@ -1,0 +1,10 @@
+"\C-j":"(clear;pwd;l)"
+"\C-xp":"cd ..pwd"
+"\C-xv":"vi ~/.vimrc"
+"\C-xi":"vi ~/.inputrc"
+"\C-xo":"vi ~/.dir/path"
+"\C-xc":"vi ~/.vim/ftplugin/cpp.vim"
+"\C-xs":"source ~/bin/c"
+"OQ":"source ~/bin/c"
+"<F2>":"source ~/bin/c"
+"\C-t":menu-complete

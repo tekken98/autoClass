@@ -1,0 +1,17 @@
+#!/bin/bash
+dir=~/.dir/path
+a=`pwd`
+if [ -f $dir ];then 
+
+	if grep "$a\$" $dir >/dev/null ; then
+		echo The  $a  is already exists!
+	else
+		echo $a >>  $dir
+		sort $dir >>/tmp/.path
+		mv /tmp/.path $dir -f
+		echo $a add to $dir.
+	fi
+else
+	mkdir -p ~/.dir
+	touch $dir
+fi
