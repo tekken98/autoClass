@@ -1,3 +1,12 @@
+"InsertClass
+"UpdateClassFunc
+function! HighlightOpenGL()
+    syntax keyword glType attribute varying uniform in out
+    syntax match glType /vec[234]/
+    syntax match glStatement /^#\a\+/
+    highlight link glType Type
+endf
+
 function! Map()
     inoremap #" #include ""<Left>
     inoremap #< #include <><Left>
@@ -14,6 +23,11 @@ function! UnMap()
     iu {{
 endfunction
 
+if exists("g:OpenGL")
+    call HighlightOpenGL()
+else
+endif
+
 if exists("myInsertClass")
     finish
 else
@@ -29,6 +43,7 @@ imap <F4> <ESC><F4>
 "set path+=/usr/include/x86_64-linux-gnu/c++/7/
 set path+=/usr/include/GL
 set path+=/usr/local/include/
+set path+=/usr/include/x86_64-linux-gnu/c++/7
 set completefunc=CompleteClassFunction
 set completeopt=menu,noinsert,preview
 map <F8> :let g:breakpoint = expand('<cword>') <CR>:exec 'breakdel func'. g:breakpoint<CR>
@@ -37,6 +52,7 @@ imap <F12> <Esc><F12>
 map <F12> :w<CR>:make<CR>
 map <F5>  :call MarkWin()<CR>
 imap <F10> <Esc>:call InsertSnipplet()<CR>
+imap <F5> <C-R>=CompleteWord()<CR>
 map <F7> :call AddYankToSnipplets()<CR>
 
 map <Right> :call PageDown(g:MarkWinId)<CR>
@@ -53,9 +69,9 @@ func! MapKey(name,first)
     exec s
 endfunc
 
-call MapKey('if','if ()')
-call MapKey('for','for ()')
-call MapKey('sw','switch ()')
+call MapKey(',if','if ()')
+call MapKey(',for','for ()')
+call MapKey(',sw','switch ()')
 
 func! PageDown(winid)
     let curid=win_getid()
@@ -80,12 +96,13 @@ endf
 
 
 func! UpdateTags()
-    let g:cppCmdAdd='ctags --extra=+q  --fields=+a+S -a  --c++-kinds=mcfp --language-force=c++ *.h'
-    let g:cppCmd = 'cpp a.cpp -o my.cpp'
-    let g:ctagsCmd = 'ctags --extra=+q --fields=+a+S  --c++-kinds=mcfp --language-force=c++ my.cpp '
+    "let g:cppCmd = 'cpp a.cpp -o my.cpp'
+    let g:cppCmd='ctags -R --extra=+q  --fields=+a+S --c++-kinds=cdfmnps --language-force=c++ /usr/include/c++/7/*'
+    let g:cppCmdAdd='ctags --extra=+q  --fields=+a+S -a  --c++-kinds=cdfmnps --language-force=c++ *.h *.cpp'
+    "let g:ctagsCmd = 'ctags --extra=+q --fields=+a+S  --c++-kinds=mcfp --language-force=c++ my.cpp '
 
     execute "!".g:cppCmd
-    execute "!".g:ctagsCmd
+    "execute "!".g:ctagsCmd
     execute "!".g:cppCmdAdd
 endfun
 "	'string':'std::__cxx11::basic_string'
@@ -108,7 +125,7 @@ func! FindWordClass(w)
         let line = getline('.')
         let lt = split(line,'\s')
         let line =  substitute(lt[0],'<.*$',"",'g')
-        let line =  substitute(lt[0],'&',"",'g')
+        let line =  substitute(line,'&',"",'g')
         let line =  substitute(line,'\s',"",'g')
         if len(lt) > 2
             if lt[1] =~ "::"
@@ -134,20 +151,11 @@ func! CompleteWord()
     let w =  FindCursorWord()
     let result  = FindWordTag(FindWordClass(w))
     call setpos('.',pos)
-    let l = 0
-    if strlen(g:restword) > 1 
-        let l = strlen(g:restword) - 1
-        exe "normal " . l . "X"
-        exe "normal " . "x"
-    endif
-    if strlen(g:restword) == 1 
-        exe "normal " . "x"
-    endif
-    let pos = getcurpos()
-    let pos[2] +=1
-    call setpos('.',pos)
-    call complete(col('.'),result)
-    call feedkeys(g:restword)
+    let l = len(g:restword)
+    let ft = 'v:val["word"] =~ "^' . g:restword . '"'
+    call filter(result,ft)
+    call complete(col('.')-l,result)
+    "call feedkeys(g:restword)
     return ''
 endf
 
@@ -242,10 +250,18 @@ fun! FindCursorWord()
     " return sth.
     " sth
     " not from . call
+    if  c < 0 
+        let c= strridx(s,'>')
+        if  c > 0 
+            if  s[c-1] == '-'
+                let  c -= 1
+            endif
+        endif
+    endif 
     if c < 0 
         let c = FindRWord(s)
         let s = strpart(s,c,len(s))
-        let g:restword  = s
+        let g:restword  = substitute(s,'\s*','','g')
         return ''
     endif
 
@@ -299,12 +315,20 @@ endfun
 
 
 function! UpdateClassFunc()
+    " if  no search find return 0
+    let saveline = getline('.')
+    let savebufname = bufname("")
     let result = search('^\s*class\s\+.*','b') 
+    if  result == 0
+        return 
+    endif
     let classname = getline(".")
     let clsname = matchlist(classname,'class\s\+\(\a\+\)')
     let cname=""
     if len(clsname) > 0
         let cname = clsname[1]
+    else
+        return
     endif
     call search('{')
     let s:begin  = line(".") + 1
@@ -315,6 +339,7 @@ function! UpdateClassFunc()
     call UnMap()
     call OpenBuffer(cppFile)
     let flag = 0
+    let templatelist = []
     for a in lines
         let a = substitute(a,'//.*','','g')
         if  a == "" 
@@ -330,9 +355,26 @@ function! UpdateClassFunc()
         if flag > 0 
             continue
         endif
-        call InsertFunc(a,cname)
+        if match(a,"template") >= 0
+            call add(templatelist,a)
+        else
+            call InsertFunc(a,cname)
+        endif
     endfor
-    call search(cname)
+
+    if match(saveline,"template") >=0
+        if (len(templatelist) > 0)
+            call OpenBuffer(savebufname)
+            for a in templatelist
+                call InsertFunc(a,cname)
+            endfor
+        endif
+        let other =  InsertFunc(saveline,cname)
+    else
+        let other =  InsertFunc(saveline,cname)
+    endif
+    call search(other)
+    "call search(cname)
     call Map()
 endfunction
 
@@ -360,8 +402,9 @@ function! OpenBuffer(name)
     endif
     let fname = matchstr(a:name,"[^.]*")
     let inc = "#include \"" . fname . ".h\""
-    if search(inc) == 0
-        call append(line('.'),inc)
+    "not add include to self
+    if (search(inc) == 0)  && (bufname("") != fname .'.h')
+        call append(line('.')-1,inc)
     endif
 endfunction
 "a : function name
@@ -371,10 +414,13 @@ function! InsertFunc(a,n)
         return
     endif
     let l = substitute(a:a,'\s*(\s*','(','g')
+    let l = substitute(l,'operator\s\+','operator','g')
     let l = substitute(l,'\s\+',' ','g')
     let l = substitute(l,'\s*)\s*',')','g')
+    let l = substitute(l,'\s*)\s*',')','g')
+
     let l = matchlist(l,'[ \t]*\(.*\)[ ]\([^( ]\+\)\((.*\);')
-    if len(l) < 2 
+    if len(l) < 1 
         let l = matchlist(a:a,'\([ \t]*\)\([^( ]\+\)\((.*\);')
         if  len(l) > 2
             let l[1] = ""
@@ -385,12 +431,18 @@ function! InsertFunc(a,n)
     if len(l) > 2 
         let l[2]  = substitute(l[2],'^\s\+','','')
         let l[3]  = substitute(l[3],'^\s\+','','')
-        let target = l[1] . a:n . "::" . l[2] . l[3] 
+        if  l[1] =~ "friend"
+            let p = substitute(l[1],'friend','','')
+            let target = p . l[2].l[3]
+        else
+            let target = l[1] . a:n . "::" . l[2] . l[3] 
+        endif
         let target= substitute(target,'^\s\+','','')
         let other = substitute(target,'\~','\\\~','')
-        let other = substitute(other,'\*','\\\*','')
+        " just add \ to * 
+        let other = substitute(other,'\*','\\\*','g')
         if search(other,'nw')
-            return
+            return other
         endif
         exec "normal G"
         if search('//'. toupper(a:n) . ' BEGIN','w')  == "" 
@@ -431,9 +483,10 @@ function! InsertClass()
                 \ '//maniulator',
                 \ '//accessor',
                 \ '};' ]
+
     call append(line('.') - 1,lst)
-    exec "normal " . string(len(lst)) . '=='
-    call search("private")
+    call search(s:name)
+    exec "normal " . string(len(lst) + 1) . '=='
 endfunction
 
 func! InsertSnipplet()
