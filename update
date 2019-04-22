@@ -1,0 +1,6 @@
+#!/bin/bash
+cp -av ~/.vim/ftplugin/{h.vim,cpp.vim,c.snip,vim.vim} vim/
+cp -av ~/.vim/scripts.vim vim/
+cp -av ~/.vimrc vim/
+cp -av ~/.inputrc tools/
+cp -av ~/bin/{a,c} tools/
