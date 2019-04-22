@@ -313,9 +313,73 @@ fun! CompleteClassFunction(findstart,base)
     endif
 endfun 
 
+func! GetFuncDeclare(lines,pos)
+    let nLines = len(a:lines)
+    "need first add 1
+    let i = a:pos - 1
+    let s = ''
+    let result={}
+    let flag = 0
+    "0 - (nlines-2)
+    while( i < nLines - 2)
+        let i = i + 1
+        let a = a:lines[i]
+        let a = substitute(a,'//.*','','g')
+        if  a == "" 
+            continue
+        endif
+        if matchstr(a,":\s*$") !=""
+            continue
+            let s=''
+        endif
+        if matchstr(a,'{') !="" 
+            let flag += 1
+            let s=''
+            continue
+        elseif matchstr(a,'}') !=""
+            let flag -= 1
+            let s=''
+            continue
+        endif
+        if flag > 0 
+            continue
+        endif
+        let s = s . a
+        if matchstr(s,';\s*$') != ''
+            " must i + 1
+            let result = {'func':s,'pos':i + 1,'result':'yes'}
+            return result
+        endif
+    endwhile
+    let result = {'func':s,'pos':i,'result':'no'}
+    return result
+endfunc
+
+func! SearchAndInsertFunc(lines,classname)
+    let templatelist=[]
+    let pos = 0
+    
+    while(1) 
+        let result = GetFuncDeclare(a:lines,pos)
+        if result['result'] == 'yes' 
+            let pos = result['pos']
+            let s = result['func']
+            if match(s,"template") >= 0
+                call add(templatelist,s)
+            else
+                call InsertFunc(s,a:classname)
+            endif
+        else
+            break
+        endif 
+        let s = ''
+    endwhile
+    return templatelist
+endfunc
 
 function! UpdateClassFunc()
     " if  no search find return 0
+    let cur= line('.')
     let saveline = getline('.')
     let savebufname = bufname("")
     let result = search('^\s*class\s\+.*','b') 
@@ -332,6 +396,7 @@ function! UpdateClassFunc()
     endif
     call search('{')
     let s:begin  = line(".") + 1
+    let cursor = cur - s:begin
     exec "normal " . "%"
     let s:end = line(".") - 1
     let lines = getline(s:begin,s:end)
@@ -340,39 +405,20 @@ function! UpdateClassFunc()
     call OpenBuffer(cppFile)
     let flag = 0
     let templatelist = []
-    for a in lines
-        let a = substitute(a,'//.*','','g')
-        if  a == "" 
-            continue
-        endif
-        if matchstr(a,'{') !="" 
-            let flag += 1
-            continue
-        elseif matchstr(a,'}') !=""
-            let flag -= 1
-            continue
-        endif
-        if flag > 0 
-            continue
-        endif
-        if match(a,"template") >= 0
-            call add(templatelist,a)
-        else
-            call InsertFunc(a,cname)
-        endif
-    endfor
-
-    if match(saveline,"template") >=0
+    let templatelist = SearchAndInsertFunc(lines,cname)
         if (len(templatelist) > 0)
             call OpenBuffer(savebufname)
             for a in templatelist
                 call InsertFunc(a,cname)
             endfor
         endif
-        let other =  InsertFunc(saveline,cname)
+    if match(saveline,"template") >=0 
+        call OpenBuffer(savebufname)
     else
-        let other =  InsertFunc(saveline,cname)
+        call OpenBuffer(cppFile)
     endif
+    let f =   GetFuncDeclare(lines,cursor)
+    let other = InsertFunc(f['func'],cname)
     call search(other)
     "call search(cname)
     call Map()
