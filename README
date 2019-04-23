@@ -1,3 +1,28 @@
-1.add cpp.vim as AutoClass <F2> to insert class <F4> to add class members!
-2.first <F5> mark window to move.
+1. functions.
+
+insert mode:
+<F2> insert new class
+<F4> insert class member function
+<F5> complete word
+<F10> insert snipplet
+<F12> make
+normal mode:
+<F2>
+<F4>
+<F5>  move another window
+<F7> yank a selection to snipplets
+<F10> traits function to head
+<F12> make
+
+2.
+
+1)add cpp.vim as AutoClass <F2> to insert class <F4> to add class members!
+2)deal with template.
+
+3.
+
+first <F5> mark window to move.
 <LEFT><RIGHT> move other window's page.<UP><DOWN> move current window's page.
+
+4.
+

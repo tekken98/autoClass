@@ -1,12 +1,34 @@
-"InsertClass
+"TRAITS
+"Map
+"UnMap
+"TransCode
+"InsertHead
+"CppFormat
+"CollectFunc
+"CppTraitsFunc
+"HighlightOpenGL
+"MapKey
+"PageDown
+"PageUp
+"MarkWin
+"UpdateTags
+"FindWordInDict
+"FindWordClass
+"CompleteWord
+"FindWordTag
+"MyTest
+"ProcessTagItem
+"FindRWord
+"GetFuncDeclare
+"SearchAndInsertFunc
 "UpdateClassFunc
-function! HighlightOpenGL()
-    syntax keyword glType attribute varying uniform in out
-    syntax match glType /vec[234]/
-    syntax match glStatement /^#\a\+/
-    highlight link glType Type
-endf
-
+"OpenBuffer
+"InsertFunc
+"InsertClass
+"InsertSnipplet
+"FindSnippletName
+"AddYankToSnipplets
+"AddToSnipplets
 function! Map()
     inoremap #" #include ""<Left>
     inoremap #< #include <><Left>
@@ -23,46 +45,122 @@ function! UnMap()
     iu {{
 endfunction
 
-if exists("g:OpenGL")
-    call HighlightOpenGL()
-else
-endif
-
 if exists("myInsertClass")
     finish
 else
     let myInsertClass=1
     call Map()
 endif
+func! TransCode(c)
+    let t = substitute(a:c,'\/\/','\\\/\\\/','g')
+    let t= substitute(t,'\~','\\\~','')
+    " just add \ to * 
+    let t= substitute(t,'\*','\\\*','g')
+    return t
+endfunc
 
-imap <F2> <Esc>:call InsertClass()<CR>
-map <F2> :call InsertClass()<CR>
-map <F4> :w<CR>:call UpdateClassFunc()<CR>
-imap <F4> <ESC><F4>
+func! InsertHead(lst)
+    let l = a:lst
+    call cursor(1,1)
+    call sort(l)
+    call reverse(l)
+    for a in l
+       " search need some  transcode
+       let t = TransCode(a)
+        if search(t,'nW') > 0
+            continue
+        endif
+        call append(line('.'),a)
+    endfor 
+endfunc
+
+func! CppFormat(key,value)
+    let ss = substitute(a:value,'\s\+',' ','g')
+    let ss = substitute(ss,'\s\+(','(','g')
+    let ss = substitute(ss,'(\s\+','(','g')
+    let ss = substitute(ss,'\s\+)',')','g')
+    let ss = substitute(ss,')\s\+',')','g')
+    let ss = substitute(ss,'\n\+\|\t\+','','g')
+    let ss = substitute(ss,'{\|}','','g')
+    return ss
+endfunc
+
+func! CollectFunc()
+    "before { that could be \n and )  and spaces
+    let pat = '^\w\+\([^;]\+\n\?\)\+[\n)]\s*{'
+    let lst =[]
+    call cursor(1,1)
+    let s =''
+    while search(pat,'W') > 0
+        let n = line('.')
+        while 1
+            let line = getline(n)
+            if matchstr(line,'{') != ''
+                let s = s . line
+                call add(lst,'//' . s)
+                let s = ''
+                break
+            endif
+            let s = s . line
+            let n += 1
+        endwhile
+        call cursor(n,1)
+    endwhile
+    return lst
+endf
+
+func! CppTraitsFunc()
+    call cursor(1,1)
+    let line = getline('.')
+    if matchstr(line,'TRAITS') == ''
+        call append(line('.') - 1,'//TRAITS')
+    endif
+    let lst = CollectFunc()
+    let Fuc =  function('CppFormat')
+    call map(lst,Fuc)
+    call InsertHead(lst)
+endfunc
+
+
+function! HighlightOpenGL()
+    syntax keyword glType attribute varying uniform in out
+    syntax match glType /vec[234]/
+    syntax match glStatement /^#\a\+/
+    highlight link glType Type
+endf
+if exists("g:OpenGL")
+    call HighlightOpenGL()
+else
+endif
+
+
+
 "set path+=/usr/include/c++/7/
 "set path+=/usr/include/x86_64-linux-gnu/c++/7/
-set path+=/usr/include/GL
-set path+=/usr/local/include/
-set path+=/usr/include/x86_64-linux-gnu/c++/7
+imap <DOWN> <S-DOWN>
+imap <F10> <Esc>:call InsertSnipplet()<CR>
+imap <F12> <Esc><F12>
+imap <F2> <Esc>:call InsertClass()<CR>
+imap <F4> <ESC><F4>
+imap <F5> <C-R>=CompleteWord()<CR>
+imap <Left> <Esc>:call PageUp(g:MarkWinId)<CR>a
+imap <Right> <Esc>:call PageDown(g:MarkWinId)<CR>a
+imap <UP> <S-UP>
+map <DOWN> <S-DOWN>
+map <F12> :w<CR>:make<CR>
+map <F2> :call InsertClass()<CR>
+map <F4> :w<CR>:call UpdateClassFunc()<CR>
+map <F5>  :call MarkWin()<CR>
+map <F7> :call AddYankToSnipplets()<CR>
+map <F10> :call CppTraitsFunc()<CR>
+map <Left> :call PageUp(g:MarkWinId)<CR>
+map <Right> :call PageDown(g:MarkWinId)<CR>
+map <UP> <S-UP>
 set completefunc=CompleteClassFunction
 set completeopt=menu,noinsert,preview
-map <F8> :let g:breakpoint = expand('<cword>') <CR>:exec 'breakdel func'. g:breakpoint<CR>
-map <F9> 0W:let g:breakpoint = expand('<cword>') <CR>:exec 'breakadd func'. g:breakpoint<CR>
-imap <F12> <Esc><F12>
-map <F12> :w<CR>:make<CR>
-map <F5>  :call MarkWin()<CR>
-imap <F10> <Esc>:call InsertSnipplet()<CR>
-imap <F5> <C-R>=CompleteWord()<CR>
-map <F7> :call AddYankToSnipplets()<CR>
-
-map <Right> :call PageDown(g:MarkWinId)<CR>
-map <Left> :call PageUp(g:MarkWinId)<CR>
-imap <Right> <Esc>:call PageDown(g:MarkWinId)<CR>a
-imap <Left> <Esc>:call PageUp(g:MarkWinId)<CR>a
-map <UP> <S-UP>
-map <DOWN> <S-DOWN>
-imap <UP> <S-UP>
-imap <DOWN> <S-DOWN>
+set path+=/usr/include/GL
+set path+=/usr/include/x86_64-linux-gnu/c++/7
+set path+=/usr/local/include/
 
 func! MapKey(name,first)
     let s = ':inoremap ' . a:name . ' ' . a:first .' <Esc>o{}'.'<UP><UP><Esc>f(a'
@@ -400,14 +498,17 @@ function! UpdateClassFunc()
     exec "normal " . "%"
     let s:end = line(".") - 1
     let lines = getline(s:begin,s:end)
+    call cursor(cur,1)
     let cppFile = expand('%<') . ".cpp"
     call UnMap()
     call OpenBuffer(cppFile)
     let flag = 0
     let templatelist = []
+    let s:templateFind = 0
     let templatelist = SearchAndInsertFunc(lines,cname)
         if (len(templatelist) > 0)
             call OpenBuffer(savebufname)
+            let s:templateFind = 1
             for a in templatelist
                 call InsertFunc(a,cname)
             endfor
@@ -497,6 +598,9 @@ function! InsertFunc(a,n)
                         \ '{',
                         \ '}',
                         \ '//' . toupper(a:n) . ' END' ]
+            if s:templateFind == 1
+                call cursor(s:end + 1,1)
+            endif
         else
             let lst = [  target,
                         \ '{',
