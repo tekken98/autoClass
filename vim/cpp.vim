@@ -75,19 +75,19 @@ func! InsertHead(lst)
 endfunc
 
 func! CppFormat(key,value)
-    let ss = substitute(a:value,'\s\+',' ','g')
+    let ss = substitute(a:value,'\n\+\|\t\+',' ','g')
+    let ss = substitute(ss,'\s\+',' ','g')
     let ss = substitute(ss,'\s\+(','(','g')
     let ss = substitute(ss,'(\s\+','(','g')
     let ss = substitute(ss,'\s\+)',')','g')
     let ss = substitute(ss,')\s\+',')','g')
-    let ss = substitute(ss,'\n\+\|\t\+','','g')
     let ss = substitute(ss,'{\|}','','g')
     return ss
 endfunc
 
 func! CollectFunc()
     "before { that could be \n and )  and spaces
-    let pat = '^\w\+\([^;]\+\n\?\)\+[\n)]\s*{'
+    let pat = '^\w\+\([^;:]\+\n\?\)\+)[\n]*\s*{'
     let lst =[]
     call cursor(1,1)
     let s =''
@@ -101,7 +101,7 @@ func! CollectFunc()
                 let s = ''
                 break
             endif
-            let s = s . line
+            let s = s .' ' . line
             let n += 1
         endwhile
         call cursor(n,1)
@@ -138,21 +138,20 @@ endif
 "set path+=/usr/include/c++/7/
 "set path+=/usr/include/x86_64-linux-gnu/c++/7/
 imap <DOWN> <S-DOWN>
+imap <F2> <Esc>:call InsertClass()<CR>
+imap <F4> <Esc>:w<CR>:call UpdateClassFunc()<CR>
+imap <F5> <C-R>=CompleteWord()<CR>
 imap <F10> <Esc>:call InsertSnipplet()<CR>
 imap <F12> <Esc><F12>
-imap <F2> <Esc>:call InsertClass()<CR>
-imap <F4> <ESC><F4>
-imap <F5> <C-R>=CompleteWord()<CR>
 imap <Left> <Esc>:call PageUp(g:MarkWinId)<CR>a
 imap <Right> <Esc>:call PageDown(g:MarkWinId)<CR>a
 imap <UP> <S-UP>
+
 map <DOWN> <S-DOWN>
-map <F12> :w<CR>:make<CR>
-map <F2> :call InsertClass()<CR>
-map <F4> :w<CR>:call UpdateClassFunc()<CR>
 map <F5>  :call MarkWin()<CR>
 map <F7> :call AddYankToSnipplets()<CR>
 map <F10> :call CppTraitsFunc()<CR>
+map <F12> :w<CR>:make<CR>
 map <Left> :call PageUp(g:MarkWinId)<CR>
 map <Right> :call PageDown(g:MarkWinId)<CR>
 map <UP> <S-UP>
@@ -613,7 +612,7 @@ endfunction
 function! InsertClass()
     let s:name = input("type class name : ")
     if  s:name == ''  
-        let s:name ="name"
+        return 
     endif
     let l = getline('.')
     let l = substitute(l,'\s\+$','','g')
@@ -700,11 +699,14 @@ func! AddYankToSnipplets()
     endtry
 endfunc
 func! AddToSnipplets(lines)
-    if  len(a:lines) < 1 
-        echo "no selection"
+    if  len(a:lines) < 3 
+        echo "too small snipplet"
         return 
     endif
     let snipname = input("input snip name:")
+    if snipname == ''
+        return 
+    endif
     let find =  FindSnippletName(snipname)
     if  find == "" 
         echo "no find"
