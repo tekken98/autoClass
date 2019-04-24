@@ -5,6 +5,7 @@
 "\C-xo":"vi ~/.dir/path"
 "\C-xc":"vi ~/.vim/ftplugin/cpp.vim"
 "\C-xs":"source ~/bin/c"
+"\C-xm":"vim -S Session.vim"
 "OQ":"source ~/bin/c"
 "<F2>":"source ~/bin/c"
 "\C-t":menu-complete

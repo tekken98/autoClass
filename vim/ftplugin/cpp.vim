@@ -1,34 +1,39 @@
 "TRAITS
-"Map
-"UnMap
-"TransCode
-"InsertHead
-"CppFormat
-"CollectFunc
-"CppTraitsFunc
-"HighlightOpenGL
-"MapKey
-"PageDown
-"PageUp
-"MarkWin
-"UpdateTags
-"FindWordInDict
-"FindWordClass
-"CompleteWord
-"FindWordTag
-"MyTest
-"ProcessTagItem
-"FindRWord
-"GetFuncDeclare
-"SearchAndInsertFunc
-"UpdateClassFunc
-"OpenBuffer
-"InsertFunc
-"InsertClass
-"InsertSnipplet
-"FindSnippletName
-"AddYankToSnipplets
-"AddToSnipplets
+"MyTest(a)
+"Map()
+"UnMap()
+"TransCode(c)
+"InsertHead(lst)
+"CppFormat(key,value)
+"CollectFunc()
+"CppTraitsFunc()
+"HighlightOpenGL()
+"MapKey(name,first)
+"PageDown(winid)
+"PageUp(winid)
+"MarkWin()
+"UpdateTags()
+"FindWordInDict(w,n)
+"FindWordClass(w)
+"CompleteWord()
+"FindWordTag(w)
+"ProcessTagItem(item)
+"FindRWord(s)
+"GetFuncDeclare(lines,pos)
+"SearchAndInsertFunc(lines,classname)
+"LocateFunc(line)
+"UpdateClassFunc()
+"OpenBuffer(name)
+"InsertFunc(a,n)
+"InsertClass()
+"InsertSnipplet()
+"FindSnippletName(name)
+"AddYankToSnipplets()
+"AddToSnipplets(lines)
+
+func! MyTest(a)
+    echo a:a
+endf
 function! Map()
     inoremap #" #include ""<Left>
     inoremap #< #include <><Left>
@@ -51,6 +56,9 @@ else
     let myInsertClass=1
     call Map()
 endif
+
+let s:CollectFlag = 0
+let  s:FucCache =[]
 func! TransCode(c)
     let t = substitute(a:c,'\/\/','\\\/\\\/','g')
     let t= substitute(t,'\~','\\\~','')
@@ -62,20 +70,20 @@ endfunc
 func! InsertHead(lst)
     let l = a:lst
     call cursor(1,1)
-    call sort(l)
     call reverse(l)
     for a in l
        " search need some  transcode
-       let t = TransCode(a)
+       let t = TransCode(a['func'])
         if search(t,'nW') > 0
             continue
         endif
-        call append(line('.'),a)
+        call append(line('.'),a['func'])
     endfor 
 endfunc
 
 func! CppFormat(key,value)
-    let ss = substitute(a:value,'\n\+\|\t\+',' ','g')
+    let ss = a:value
+    let ss = substitute(ss,'\n\+\|\t\+',' ','g')
     let ss = substitute(ss,'\s\+',' ','g')
     let ss = substitute(ss,'\s\+(','(','g')
     let ss = substitute(ss,'(\s\+','(','g')
@@ -86,18 +94,25 @@ func! CppFormat(key,value)
 endfunc
 
 func! CollectFunc()
+   if (&mod == 0) && (s:CollectFlag == 1)
+        return s:FucCache
+    endif
     "before { that could be \n and )  and spaces
-    let pat = '^\w\+\([^;:]\+\n\?\)\+)[\n]*\s*{'
-    let lst =[]
+    let pat = '^\w\+\([^;]\+\n\?\)\+)[\n]*\s*{'
+    let lst=[]
     call cursor(1,1)
     let s =''
     while search(pat,'W') > 0
         let n = line('.')
+        let first = n
         while 1
             let line = getline(n)
             if matchstr(line,'{') != ''
                 let s = s . line
-                call add(lst,'//' . s)
+                let s = '//' . s
+                let s = CppFormat(0,s)
+                let res = {'func':s,'row':first}
+                call add(lst,res)
                 let s = ''
                 break
             endif
@@ -106,6 +121,8 @@ func! CollectFunc()
         endwhile
         call cursor(n,1)
     endwhile
+    let s:FucCache = lst
+    let s:CollectFlag = 1
     return lst
 endf
 
@@ -116,11 +133,8 @@ func! CppTraitsFunc()
         call append(line('.') - 1,'//TRAITS')
     endif
     let lst = CollectFunc()
-    let Fuc =  function('CppFormat')
-    call map(lst,Fuc)
     call InsertHead(lst)
 endfunc
-
 
 function! HighlightOpenGL()
     syntax keyword glType attribute varying uniform in out
@@ -148,7 +162,8 @@ imap <Right> <Esc>:call PageDown(g:MarkWinId)<CR>a
 imap <UP> <S-UP>
 
 map <DOWN> <S-DOWN>
-map <F5>  :call MarkWin()<CR>
+map <F4> :w<CR>:call UpdateClassFunc()<CR>
+map <F5> :call MarkWin()<CR>
 map <F7> :call AddYankToSnipplets()<CR>
 map <F10> :call CppTraitsFunc()<CR>
 map <F12> :w<CR>:make<CR>
@@ -262,9 +277,6 @@ func! FindWordTag(w)
     let ss = []
     for a in readfile('tags')
         let flag=0
-        "if (match(a,"timeval")) == 0
-        "call MyTest(a)
-        "endif
         if  match(a ,"^_") != 0  
             if s:className != '' 
                 if  match(a,s:className) > 0 
@@ -288,13 +300,7 @@ func! FindWordTag(w)
     return popList
 endfunc
 
-func! MyTest(a)
-    echo a:a
-endf
 func! ProcessTagItem(item)
-    "if (match(a:item,"isalpha")) == 0
-    "	call MyTest(a:item)
-    "endif
     let lst = substitute(a:item,'/^\t\+','/^ ','')
     let lst = split(lst,'\t')
     let dec = substitute(lst[2],'/^\s*','','')
@@ -418,7 +424,7 @@ func! GetFuncDeclare(lines,pos)
     let result={}
     let flag = 0
     "0 - (nlines-2)
-    while( i < nLines - 2)
+    while( i <= nLines - 2)
         let i = i + 1
         let a = a:lines[i]
         let a = substitute(a,'//.*','','g')
@@ -474,6 +480,27 @@ func! SearchAndInsertFunc(lines,classname)
     return templatelist
 endfunc
 
+func! LocateFunc(line)
+    let row = line('.')
+    let ss = a:line
+    if matchstr(ss,'^\/\/') ==''
+        exec "normal 'a"
+        return
+    endif
+    exec 'normal ma'
+    let t = substitute(ss,'\/\/\s\+' ,'','')
+    " big fault
+    let t = substitute(ss,'\*' ,'\\\*','g')
+    let l = CollectFunc()
+    for a in l
+        if matchstr(a['func'],t) != ''
+            call cursor(row,1)
+            call cursor(a['row'],1)
+            break
+        endif
+    endfor
+endfunc
+
 function! UpdateClassFunc()
     " if  no search find return 0
     let cur= line('.')
@@ -481,6 +508,8 @@ function! UpdateClassFunc()
     let savebufname = bufname("")
     let result = search('^\s*class\s\+.*','b') 
     if  result == 0
+        call cursor(cur,1)
+        call LocateFunc(saveline)
         return 
     endif
     let classname = getline(".")
@@ -677,6 +706,9 @@ func! InsertSnipplet()
             call add(lst, s)
     endif
     let  sn = inputlist(lst)
+    if sn == ''
+        return
+    endif
     let content = filecontent[g:snipdict[sel[sn]]['begin']:g:snipdict[sel[sn]]['end']]
     call append(line('.') - 1, content)
 endf

@@ -1,7 +1,13 @@
 "TRAITS
-"InsertHead
-"MapKey
-"TraitsFunc
+"**
+"MapKey(mapname,first,last)
+"
+"
+"<SID>InsertHead(lst)
+"
+"
+"TraitsFunc()
+"
 func! MapKey(mapname,first,last)
     let s = ':inoremap ' . a:mapname . ' ' . a:first .'<Esc>o'.a:last .'<UP><ESC>A '
     exec s
@@ -11,11 +17,20 @@ call MapKey(',for','for','endfor')
 call MapKey(',fc','func!','endfunc')
 map <F8> :let g:breakpoint = expand('<cword>') <CR>:exec 'breakdel func'. g:breakpoint<CR>
 map <F9> 0W:let g:breakpoint = expand('<cword>') <CR>:exec 'breakadd func'. g:breakpoint<CR>
-map <F10> :call TraitsFunc()<CR>
+map  <F10> :call TraitsFunc()<CR>
 
-func! InsertHead(lst)
+func! <SID>InsertHead(lst)
+    "call sort(lst)
+    let res = []
+    for a in a:lst
+        let  s =  a .'$'
+        if search(s,'w') > 0 
+            continue
+        endif
+        call add(res,a)
+    endfor 
     call cursor(1,1)
-    call append(line('.'),a:lst)
+    call append(line('.'),res)
 endfunc
 func! TraitsFunc()
     let lst=[]
@@ -26,22 +41,13 @@ func! TraitsFunc()
     endif
     call cursor(1,1)
     while search('^func','W') >0
-            let line = getline('.')
-            let res = matchlist(line,'\w\+!\?\s\+\(\w\+\)')
-            if len(res) > 1
-                call add(lst,'"' . res[1])
-            endif
-    endwhile
-    call cursor(1,1)
-    "call sort(lst)
-    for a in lst
-        let  s =  a .'$'
-        if search(s,'w') > 0 
-            exec 'normal dd'
-            continue
+        let line = getline('.')
+        let res = split(line , ' ')
+        if len(res) > 1
+            call add(lst,'"' . res[1])
+        else
+            return 
         endif
-    endfor 
-    call InsertHead(lst)
+    endwhile
+    call <SID>InsertHead(lst)
 endfunc
-
-
