@@ -24,5 +24,8 @@ normal mode:
 first <F5> mark window to move.
 <LEFT><RIGHT> move other window's page.<UP><DOWN> move current window's page.
 
-4.
+4. 
+
+function syntax 
+<F4> jump to function from head of cpp file.
 
