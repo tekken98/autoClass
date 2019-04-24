@@ -17,7 +17,7 @@ call MapKey(',for','for','endfor')
 call MapKey(',fc','func!','endfunc')
 map <F8> :let g:breakpoint = expand('<cword>') <CR>:exec 'breakdel func'. g:breakpoint<CR>
 map <F9> 0W:let g:breakpoint = expand('<cword>') <CR>:exec 'breakadd func'. g:breakpoint<CR>
-map  <F10> :call TraitsFunc()<CR>
+map  <F7> :call <SID>TraitsFunc()<CR>
 
 func! <SID>InsertHead(lst)
     "call sort(lst)
@@ -32,7 +32,7 @@ func! <SID>InsertHead(lst)
     call cursor(1,1)
     call append(line('.'),res)
 endfunc
-func! TraitsFunc()
+func! <SID>TraitsFunc()
     let lst=[]
     call cursor(1,1)
     let line = getline('.')

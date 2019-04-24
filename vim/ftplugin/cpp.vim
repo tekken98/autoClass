@@ -64,6 +64,9 @@ func! TransCode(c)
     let t= substitute(t,'\~','\\\~','')
     " just add \ to * 
     let t= substitute(t,'\*','\\\*','g')
+    " add [] 
+    let t= substitute(t,'[','\\\[','g')
+    let t= substitute(t,']','\\\]','g')
     return t
 endfunc
 
@@ -77,7 +80,9 @@ func! InsertHead(lst)
         if search(t,'nW') > 0
             continue
         endif
+        "call MyTest(t)
         call append(line('.'),a['func'])
+        let s:CollectFlag =0
     endfor 
 endfunc
 
@@ -98,7 +103,8 @@ func! CollectFunc()
         return s:FucCache
     endif
     "before { that could be \n and )  and spaces
-    let pat = '^\w\+\([^;]\+\n\?\)\+)[\n]*\s*{'
+    "let pat = '^\w\+\([^;]\+\n\?\)\+)[\n]*\s*{'
+    let pat = '^\w\+\([^;)]\+\n\?#\?\)\+)\([\n]\|#\w\+\)*\s*{'
     let lst=[]
     call cursor(1,1)
     let s =''
@@ -116,7 +122,12 @@ func! CollectFunc()
                 let s = ''
                 break
             endif
-            let s = s .' ' . line
+            " func() 
+            " #endif
+            " {
+            if matchstr(line ,'^#') ==''
+                let s = s .' ' . line
+            endif
             let n += 1
         endwhile
         call cursor(n,1)
@@ -488,9 +499,8 @@ func! LocateFunc(line)
         return
     endif
     exec 'normal ma'
-    let t = substitute(ss,'\/\/\s\+' ,'','')
     " big fault
-    let t = substitute(ss,'\*' ,'\\\*','g')
+    let t = TransCode(ss)
     let l = CollectFunc()
     for a in l
         if matchstr(a['func'],t) != ''
