@@ -1,0 +1,47 @@
+#!/bin/bash
+
+script_dst=~/.vim/scripts.vim
+script_src=vim/scripts.vim
+syndst=~/.vim/after/syntax
+synsrc=vim/after/syntax/*
+ftdst=~/.vim/ftplugin
+ftsrc=vim/ftplugin/*
+mkdir -p $syndst
+mkdir -p $ftdst
+sfile=""
+dfile=""
+check()
+{
+	if [ -e $dfile ] ; then 
+		diff -u --color=always $dfile $sfile
+		if [ $? != 0 ]; then 
+			echo y or n
+			read  ans
+			if [ "$ans" == "y" ]; then
+				cp -i $sfile $dfile
+			fi
+		fi
+	else
+		cp -i $sfile $dfile
+	fi
+}
+
+for f in  $script_src; do
+	sfile=$f
+	dfile=$script_dst
+	check
+done
+
+for f in $synsrc;do
+	name=`basename $f`
+	sfile=$f
+	dfile=$syndst/$name
+	check
+done
+
+for f in $ftsrc; do
+	name=`basename $f`
+	sfile=$f
+	dfile=$ftdst/$name
+	check
+done
