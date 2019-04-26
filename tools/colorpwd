@@ -1,0 +1,4 @@
+#!/bin/bash
+name=`pwd`
+echo -e "\e[30;42m$name\e[1;30;40m"
+ls -F --color

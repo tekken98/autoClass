@@ -41,3 +41,13 @@ for f in $ftsrc; do
 	dfile=$ftdst/$name
 	check $f $dfile
 done
+for f in {vim/.vimrc,tools/.inputrc};do
+	name=`basename $f`
+	dfile=~/$name
+	check $f $dfile
+done
+for f in {tools/[a,c,colorpwd};do
+	name=`basename $f`
+	dfile=~/bin/$name
+	check $f $dfile
+done

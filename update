@@ -4,4 +4,4 @@ cp -av ~/.vim/scripts.vim vim/
 cp -av ~/.vim/after/syntax/*.vim vim/after/syntax/
 cp -av ~/.vimrc vim/
 cp -av ~/.inputrc tools/
-cp -av ~/bin/{a,c} tools/
+cp -av ~/bin/{a,c,colorpwd} tools/
