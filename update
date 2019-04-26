@@ -1,7 +1,7 @@
 #!/bin/bash
-cp -av ~/.vim/ftplugin/{h.vim,cpp.vim,c.snip,vim.vim} vim/ftplugin/
-cp -av ~/.vim/scripts.vim vim/
-cp -av ~/.vim/after/syntax/*.vim vim/after/syntax/
-cp -av ~/.vimrc vim/
-cp -av ~/.inputrc tools/
-cp -av ~/bin/{a,c,colorpwd} tools/
+cp -v ~/.vim/ftplugin/{h.vim,cpp.vim,c.snip,vim.vim} vim/ftplugin/
+cp -v ~/.vim/scripts.vim vim/
+cp -v ~/.vim/after/syntax/*.vim vim/after/syntax/
+cp -v ~/.vimrc vim/
+cp -v ~/.inputrc tools/
+cp -v ~/bin/{a,c,colorpwd} tools/
