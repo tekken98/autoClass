@@ -18,11 +18,11 @@ check()
 			echo y or n
 			read  ans
 			if [ "$ans" == "y" ]; then
-				cp -i $1 $2
+				cp -iv $1 $2
 			fi
 		fi
 	else
-		cp -i $sfile $dfile
+		cp -iv $1 $2
 	fi
 }
 
