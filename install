@@ -8,17 +8,17 @@ ftdst=~/.vim/ftplugin
 ftsrc=vim/ftplugin/*
 mkdir -p $syndst
 mkdir -p $ftdst
-sfile=""
-dfile=""
+#$1 src
+#$2 dst
 check()
 {
-	if [ -e $dfile ] ; then 
-		diff -u --color=always $dfile $sfile
+	if [ -e $2 ] ; then 
+		diff -u --color=always $2 $1
 		if [ $? != 0 ]; then 
 			echo y or n
 			read  ans
 			if [ "$ans" == "y" ]; then
-				cp -i $sfile $dfile
+				cp -i $1 $2
 			fi
 		fi
 	else
@@ -27,21 +27,17 @@ check()
 }
 
 for f in  $script_src; do
-	sfile=$f
-	dfile=$script_dst
-	check
+	check $f $script_dst
 done
 
 for f in $synsrc;do
 	name=`basename $f`
-	sfile=$f
 	dfile=$syndst/$name
-	check
+	check $f $dfile
 done
 
 for f in $ftsrc; do
 	name=`basename $f`
-	sfile=$f
 	dfile=$ftdst/$name
-	check
+	check $f $dfile
 done
