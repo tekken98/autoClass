@@ -41,7 +41,7 @@ for f in $ftsrc; do
 	dfile=$ftdst/$name
 	check $f $dfile
 done
-for f in {vim/.vimrc,tools/.inputrc};do
+for f in vim/.vimrc  tools/{.inputrc,.bashrc};do
 	name=`basename $f`
 	dfile=~/$name
 	check $f $dfile
