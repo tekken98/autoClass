@@ -57,7 +57,7 @@ else
     call Map()
 endif
 
-let s:CollectFlag = 0
+let g:CollectFlag = 0
 let  s:FucCache =[]
 func! TransCode(c)
     let t = substitute(a:c,'\/\/','\\\/\\\/','g')
@@ -82,7 +82,7 @@ func! InsertHead(lst)
         endif
         "call MyTest(t)
         call append(line('.'),a['func'])
-        let s:CollectFlag =0
+        let g:CollectFlag =0
     endfor 
 endfunc
 
@@ -99,7 +99,7 @@ func! CppFormat(key,value)
 endfunc
 
 func! CollectFunc()
-   if (&mod == 0) && (s:CollectFlag == 1)
+   if (&mod == 0) && (g:CollectFlag == 1)
         return s:FucCache
     endif
     "before { that could be \n and )  and spaces
@@ -153,10 +153,12 @@ function! HighlightOpenGL()
     syntax match glStatement /^#\a\+/
     highlight link glType Type
 endf
+
 if exists("g:OpenGL")
     call HighlightOpenGL()
 else
 endif
+au BufWrite :let g:CollectFlag=0
 
 
 

@@ -1,4 +1,4 @@
-"\C-j":"(colorpwd)"
+#"\C-j":"(colorpwd)"
 "\C-xp":"cd ..pwd"
 "\C-xv":"vi ~/.vimrc"
 "\C-xi":"vi ~/.inputrc"
