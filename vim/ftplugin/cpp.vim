@@ -80,7 +80,6 @@ func! InsertHead(lst)
         if search(t,'nW') > 0
             continue
         endif
-        "call MyTest(t)
         call append(line('.'),a['func'])
         let g:CollectFlag =0
     endfor 
@@ -150,6 +149,7 @@ endfunc
 function! HighlightOpenGL()
     syntax keyword glType attribute varying uniform in out
     syntax match glType /vec[234]/
+    syntax match glType /mat[234]/
     syntax match glStatement /^#\a\+/
     highlight link glType Type
 endf
@@ -169,7 +169,7 @@ imap <F2> <Esc>:call InsertClass()<CR>
 imap <F4> <Esc>:w<CR>:call UpdateClassFunc()<CR>
 imap <F5> <C-R>=CompleteWord()<CR>
 imap <F10> <Esc>:call InsertSnipplet()<CR>
-imap <F12> <Esc><F12>
+imap <F12> <Esc>:w<CR>:make<CR>
 imap <Left> <Esc>:call PageUp(g:MarkWinId)<CR>a
 imap <Right> <Esc>:call PageDown(g:MarkWinId)<CR>a
 imap <UP> <S-UP>
@@ -179,7 +179,7 @@ map <F4> :w<CR>:call UpdateClassFunc()<CR>
 map <F5> :call MarkWin()<CR>
 map <F7> :call AddYankToSnipplets()<CR>
 map <F10> :call CppTraitsFunc()<CR>
-map <F12> :w<CR>:make<CR>
+map <F12> :w<CR>:make test<CR>
 map <Left> :call PageUp(g:MarkWinId)<CR>
 map <Right> :call PageDown(g:MarkWinId)<CR>
 map <UP> <S-UP>
@@ -559,8 +559,14 @@ function! UpdateClassFunc()
         call OpenBuffer(cppFile)
     endif
     let f =   GetFuncDeclare(lines,cursor)
-    let other = InsertFunc(f['func'],cname)
+    let other =FindClassFuncLocation (f['func'],cname)
+    if other == 'no'
+        call OpenBuffer(savebufname)
+        let f =   GetFuncDeclare(lines,cursor)
+        let other =FindClassFuncLocation (f['func'],cname)
+    endif
     call search(other)
+
     "call search(cname)
     call Map()
 endfunction
@@ -594,12 +600,8 @@ function! OpenBuffer(name)
         call append(line('.')-1,inc)
     endif
 endfunction
-"a : function name
-"n : classname
-function! InsertFunc(a,n)
-    if matchstr(a:a,')\s*;') == ""  
-        return
-    endif
+
+func! FindClassFuncLocation(a,n)
     let l = substitute(a:a,'\s*(\s*','(','g')
     let l = substitute(l,'operator\s\+','operator','g')
     let l = substitute(l,'\s\+',' ','g')
@@ -631,6 +633,16 @@ function! InsertFunc(a,n)
         if search(other,'nw')
             return other
         endif
+        return 'no'
+    endif
+endfunc
+"a : function name
+"n : classname
+function! InsertFunc(a,n)
+    if matchstr(a:a,')\s*;') == ""  
+        return
+    endif
+    if FindClassFuncLocation(a:a,a:n) == 'no'
         exec "normal G"
         if search('//'. toupper(a:n) . ' BEGIN','w')  == "" 
             let lst = [   '//' . toupper(a:n) . ' BEGIN',

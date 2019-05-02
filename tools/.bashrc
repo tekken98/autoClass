@@ -95,6 +95,7 @@ export LESS_TERMCAP_se="$(tput sgr0)"
 alias ..="cd .."        #go to parent dir
 alias ...="cd ../.."    #go to grandparent dir
 alias -- -="cd -"       #go to previous dir
+alias l='ls'
 alias l.='ls -d .*'     #list hidden files
 alias ll='ls -lhrt'     #extra info compared to "l"
 alias lld='ls -lUd */'  #list directories

@@ -1,3 +1,5 @@
+Vim plugins.
+
 1. functions.
 
 insert mode:
@@ -8,7 +10,7 @@ insert mode:
 <F12> make
 normal mode:
 <F2>
-<F4>
+<F4>  goto function under the cursor after traits function
 <F5>  move another window
 <F7> yank a selection to snipplets
 <F10> traits function to head
@@ -16,7 +18,7 @@ normal mode:
 
 2.
 
-1)add cpp.vim as AutoClass <F2> to insert class <F4> to add class members!
+1)add cpp.vim as AutoClass <F2> to insert class to head files , <F4> to add class members to cpp files!
 2)deal with template.
 
 3.
@@ -27,5 +29,4 @@ first <F5> mark window to move.
 4. 
 
 function syntax 
-<F4> jump to function from head of cpp file.
-
+<F4> jump to function from head of cpp file after traits functions.
