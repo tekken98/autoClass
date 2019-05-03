@@ -54,6 +54,7 @@ if exists("myInsertClass")
     finish
 else
     let myInsertClass=1
+    let g:MyJumped = 0
     call Map()
 endif
 
@@ -498,8 +499,11 @@ func! LocateFunc(line)
     let ss = a:line
     if matchstr(ss,'^\/\/') ==''
         exec "normal 'a"
+        let g:MyJumped = 0
         return
     endif
+    " something can't return
+    let g:MyJumped = 1
     exec 'normal ma'
     " big fault
     let t = TransCode(ss)
@@ -518,8 +522,8 @@ function! UpdateClassFunc()
     let cur= line('.')
     let saveline = getline('.')
     let savebufname = bufname("")
-    let result = search('^\s*class\s\+.*','b') 
-    if  result == 0
+    let result = search('^\s*class\s\+.*','bW') 
+    if  result == 0 || g:MyJumped == 1
         call cursor(cur,1)
         call LocateFunc(saveline)
         return 
@@ -605,6 +609,7 @@ func! FindClassFuncLocation(a,n)
     let l = substitute(a:a,'\s*(\s*','(','g')
     let l = substitute(l,'operator\s\+','operator','g')
     let l = substitute(l,'\s\+',' ','g')
+    let l = substitute(l,'^\s','','g')
     let l = substitute(l,'\s*)\s*',')','g')
     let l = substitute(l,'\s*)\s*',')','g')
 
@@ -618,15 +623,15 @@ func! FindClassFuncLocation(a,n)
         let l[1] = l[1] . " " 
     endif
     if len(l) > 2 
-        let l[2]  = substitute(l[2],'^\s\+','','')
-        let l[3]  = substitute(l[3],'^\s\+','','')
+        let l[2]  = substitute(l[2],'^\s*','','')
+        let l[3]  = substitute(l[3],'^\s*','','')
         if  l[1] =~ "friend"
             let p = substitute(l[1],'friend','','')
             let target = p . l[2].l[3]
         else
             let target = l[1] . a:n . "::" . l[2] . l[3] 
         endif
-        let target= substitute(target,'^\s\+','','')
+        let s:target= substitute(target,'^\s*','','')
         let other = substitute(target,'\~','\\\~','')
         " just add \ to * 
         let other = substitute(other,'\*','\\\*','g')
@@ -644,9 +649,10 @@ function! InsertFunc(a,n)
     endif
     if FindClassFuncLocation(a:a,a:n) == 'no'
         exec "normal G"
+        let lst=[]
         if search('//'. toupper(a:n) . ' BEGIN','w')  == "" 
             let lst = [   '//' . toupper(a:n) . ' BEGIN',
-                        \ target,
+                        \ s:target,
                         \ '{',
                         \ '}',
                         \ '//' . toupper(a:n) . ' END' ]
@@ -654,7 +660,7 @@ function! InsertFunc(a,n)
                 call cursor(s:end + 1,1)
             endif
         else
-            let lst = [  target,
+            let lst = [  s:target,
                         \ '{',
                         \ '}']
         endif
