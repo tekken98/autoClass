@@ -1,10 +1,12 @@
 /* vim: ft=cpp : */
 //BEGIN GLUT_MAKE
-INCLUDE=-I/usr/include
-LIBS=-lGL -lGLU -l3ds -lglut
+INCDIRS=-I/usr/include
+LIBDIRS=-lGL -lGLU -l3ds -lglut
+CC=gcc
 CFLAGS=-Wall
+LIBS=-lX11 -lXi -lXmu -lglut -lGL -lGLU -lm
 a:a.cpp
-	cc a.cpp -o a $(INCLUDE) $(LIBS) $(CFLAGS)
+	$(CC) a.cpp -o a $(INCDIRS) $(LIBDIRS) $(CFLAGS)
 	
 //END GLUT_MAKE
 //BEGIN COUT_VECTOR
@@ -74,6 +76,13 @@ void on_display()
 void on_mouse(int button,int action,int x, int y)
 {
 }
+void on_mouseMotion(int x , int y)
+{
+}
+void on_reshape(int w, int h)
+{
+    glViewport(0,0,w,h);
+}
 void init()
 {
 }
@@ -84,11 +93,19 @@ int main(int argc , char** argv)
     glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGBA);
     glutInitWindowSize(800, 600);
     glutCreateWindow("title");
-    init();
+    // functions
     glutDisplayFunc(on_display);
+    glutReshapeFunc(on_reshape);
     glutMouseFunc(on_mouse);
+    glutMotionFunc(on_mouseMotion);
+    //glutPassiveMotionFunc(on_mouseMotion);
     glutSpecialFunc(on_special);
     glutTimerFunc(50,on_time,0);
+    if (GLEW_OK != err){
+        printf("GLEW Error:%s\n",glewGetErrorString(err));
+        return 1;
+    }
+    init();
     glutMainLoop();
     return 0;
 }

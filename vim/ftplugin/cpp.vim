@@ -155,9 +155,16 @@ function! HighlightOpenGL()
     highlight link glType Type
 endf
 
+function! HighlightC()
+    "syntax keyword glType attribute varying uniform in out
+    syntax keyword glType uchar ushort uint ulong cch
+    highlight link glType cType
+endf
+
 if exists("g:OpenGL")
     call HighlightOpenGL()
 else
+    call HighlightC()
 endif
 au BufWrite :let g:CollectFlag=0
 
@@ -437,6 +444,7 @@ func! GetFuncDeclare(lines,pos)
     let s = ''
     let result={}
     let flag = 0
+    let flag_p=0
     "0 - (nlines-2)
     while( i <= nLines - 2)
         let i = i + 1
@@ -449,16 +457,21 @@ func! GetFuncDeclare(lines,pos)
             continue
             let s=''
         endif
-        if matchstr(a,'{') !="" 
+        let ct = 0
+        let ct = matchend(a,'{',ct) 
+        while ( ct != -1) 
+            let ct = matchend(a,'{',ct) 
             let flag += 1
-            let s=''
-            continue
-        elseif matchstr(a,'}') !=""
+            let flag_p=1
+        endwhile
+        let ct = matchend(a,'}',ct) 
+        while ( ct != -1 ) 
+            let ct = matchend(a,'}',ct) 
             let flag -= 1
-            let s=''
-            continue
-        endif
-        if flag > 0 
+            let flag_p=1
+        endwhile
+        if flag > 0  || flag_p == 1
+            let flag_p = 0
             continue
         endif
         let s = s . a

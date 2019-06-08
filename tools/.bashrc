@@ -63,7 +63,6 @@ shopt -s checkwinsize
 # use GREP_COLOR=7 to highlight whitespace on black terminals
 # LANG=C for speed. See also: http://www.pixelbeat.org/scripts/findrepo
 alias grep='GREP_COLOR="1;33;40" LANG=C grep --color=auto'
-
 alias ls="BLOCK_SIZE=\'1 ls --color=auto" #enable thousands grouping and colour
 alias minicom='minicom -c on' #enable colour
 alias cal='cal -3' #show 3 months by default
@@ -74,12 +73,12 @@ alias links='links -force-html' #need to enable colour in config menu manually
 alias xterm='xterm -fb "" -bg black -fg gray -fa "Sans Mono" -fs 9 +sb -sl 3000 -g 80x50+1+1'
 #alias sudo='sudo env PATH=$PATH' #work around sudo built --with-secure-path (ubuntu)
 alias vim='vim -X' #don't try to contact xserver (which can hang on network issues)
-alias gdb='gdb -tui -quiet' #enable the text window interface if possible
+#alias gdb='gdb -tui -quiet' #enable the text window interface if possible
 alias head='head -n $((${LINES:-12}-2))' #as many as possible without scrolling
 alias tail='tail -n $((${LINES:-12}-2)) -s.1' #Likewise, also more responsive -f
 alias mplayer='mplayer -msglevel all=-1:statusline=5:cplayer=5' #less verbose
 alias clip='xclip -selection c' #update the main clipboard
-
+alias virtualbox='VBOX_GUI_DBG_ENABLED=1 virtualbox'
 # Tell less to display colours, and use smartcase searching
 # Also don't wrap lines, as less supports horizontal scolling
 # Note setting Q to use the visible bell, may cause delays.
@@ -161,3 +160,6 @@ if test -e $git_integration; then
   export GIT_PS1_SHOWDIRTYSTATE=1
   PS1='\[\e[1m\]\h:\W$(__git_ps1 " (%s)")\$\[\e[0m\] '
 fi
+# Install Ruby Gems to ~/gems
+export GEM_HOME="$HOME/gems"
+export PATH="$HOME/gems/bin:$PATH"

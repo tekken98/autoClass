@@ -8,4 +8,5 @@
 "\C-xm":"vim -S Session.vim"
 "OQ":"source ~/bin/c"
 "<F2>":"source ~/bin/c"
+"<F3>":""
 "\C-t":menu-complete

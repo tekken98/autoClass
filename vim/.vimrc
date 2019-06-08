@@ -8,9 +8,6 @@
 " This line should not be removed as it ensures that various options are
 " properly set to work with the Vim-related packages available in Debian.
 runtime! debian.vim
-map , :w<CR>
-map <F3> :cn<CR>
-
 " Vim will load $VIMRUNTIME/defaults.vim if the user does not have a vimrc.
 " This happens after /etc/vim/vimrc(.local) are loaded, so it will override
 " any settings in these files.
@@ -76,3 +73,7 @@ set foldlevel=0
 set clipboard+=unnamed
 autocmd BufNewFile *.h so ~/.vim/ftplugin/h.vim
 autocmd BufEnter *.c set filetype=cpp
+autocmd BufEnter *.kt set filetype=java
+map <F12> :w<Esc>:make<CR>
+map <Space> <C-f>
+map  b  <C-b>
