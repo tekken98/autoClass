@@ -48,6 +48,7 @@ for f in vim/.vimrc  tools/{.inputrc,.bashrc};do
 done
 for f in tools/{a,c,colorpwd};do
 	name=`basename $f`
+    mkdir ~/bin 2>/dev/null
 	dfile=~/bin/$name
 	check $f $dfile
 done
