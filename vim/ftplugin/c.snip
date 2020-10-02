@@ -1,4 +1,20 @@
 /* vim: ft=cpp : */
+//BEGIN MSG_VARIANT_PARAMETERS
+#include <iostream>
+using namespace std;
+void msg()
+{
+};
+
+template <typename T, typename... V>
+void  msg( const T& a , const V& ... args)
+{
+    cout << a ;
+    msg(args...);
+}
+
+
+//END MSG_VARIANT_PARAMETERS
 //BEGIN GLUT_MAKE
 INCDIRS=-I/usr/include
 LIBDIRS=-lGL -lGLU -l3ds -lglut
@@ -30,22 +46,6 @@ struct binary<0> {
     static unsigned const value = 0;
 };
 //END BINARY
-//BEGIN MSG_VARIANT_PARAMETERS
-#include <iostream>
-using namespace std;
-template <typename T>
-void msg(T& a)
-{
-    cout << a;
-};
-
-template <typename T, typename Y , typename... V>
-void  msg( T& a , Y& y ,  V& ... args)
-{
-    cout << a ;
-    msg(y,args...);
-}
-//END MSG_VARIANT_PARAMETERS
 //BEGIN MAIN_STD_EMPTY
 #include <iostream>
 using namespace std;

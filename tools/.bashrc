@@ -162,4 +162,6 @@ if test -e $git_integration; then
 fi
 # Install Ruby Gems to ~/gems
 export GEM_HOME="$HOME/gems"
-export PATH="$HOME/gems/bin:$PATH"
+export PATH="$HOME/bin:$HOME/gems/bin:$PATH"
+CPLUS_INCLUDE_PATH="$HOME/include"
+export CPLUS_INCLUDE_PATH

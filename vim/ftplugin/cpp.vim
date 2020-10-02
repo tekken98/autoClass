@@ -557,8 +557,11 @@ function! UpdateClassFunc()
     let lines = getline(s:begin,s:end)
     call cursor(cur,1)
     let cppFile = expand('%<') . ".cpp"
+    let curFile = expand('%')
     call UnMap()
-    call OpenBuffer(cppFile)
+    if cppFile != curFile 
+        "call OpenBuffer(cppFile)
+    endif
     let flag = 0
     let templatelist = []
     let s:templateFind = 0
@@ -573,12 +576,18 @@ function! UpdateClassFunc()
     if match(saveline,"template") >=0 
         call OpenBuffer(savebufname)
     else
-        call OpenBuffer(cppFile)
+        if  match(cppFile,savebufname) >= 0 
+
+        else
+            call OpenBuffer(cppFile)
+        endif
     endif
     let f =   GetFuncDeclare(lines,cursor)
     let other =FindClassFuncLocation (f['func'],cname)
     if other == 'no'
-        call OpenBuffer(savebufname)
+        if  match(cppFile,savebufname) < 0 
+            call OpenBuffer(savebufname)
+        endif
         let f =   GetFuncDeclare(lines,cursor)
         let other =FindClassFuncLocation (f['func'],cname)
     endif
@@ -696,10 +705,10 @@ function! InsertClass()
                 \ 'private:',
                 \ 'public:',
                 \ '//constructor',
-                \ '' . s:name . "();",
-                \ '' . s:name . "(const ". s:name . "& s);",
-                \ '' .s:name . "& operator=(const ". s:name . "& s);",
-                \ '~' . s:name . "();",
+                \ '' . s:name . "(){};",
+                \ '' . s:name . "(const ". s:name . "& s) = delete;",
+                \ '' .s:name . "& operator=(const ". s:name . "& s) = delete;",
+                \ '~' . s:name . "(){};",
                 \ 'public:',
                 \ '//maniulator',
                 \ '//accessor',

@@ -5,5 +5,5 @@ cp -v ~/.vim/after/syntax/*.vim vim/after/syntax/
 cp -v ~/.vimrc vim/
 
 cp -v ~/.bashrc tools/
-cp -v ~/.inputrc tools/
-cp -v ~/bin/{a,c,colorpwd} tools/
+#cp -v ~/.inputrc tools/
+#cp -v ~/bin/{a,c,colorpwd} tools/

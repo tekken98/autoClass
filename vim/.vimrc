@@ -75,5 +75,6 @@ autocmd BufNewFile *.h so ~/.vim/ftplugin/h.vim
 autocmd BufEnter *.c set filetype=cpp
 autocmd BufEnter *.kt set filetype=java
 map <F12> :w<Esc>:make<CR>
+imap <F12> <Esc>:w<Esc>:make<CR>
 map <Space> <C-f>
 map  b  <C-b>
